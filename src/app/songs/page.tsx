@@ -50,10 +50,10 @@ export default function SongsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f0f14]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0d0d14]">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-amber-500/20 rounded-full" />
-          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-amber-500 rounded-full animate-spin" />
+          <div className="w-16 h-16 border-4 border-teal-500/20 rounded-full" />
+          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-teal-500 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -62,9 +62,9 @@ export default function SongsPage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#0f0f14]">
+    <div className="flex min-h-screen bg-[#0d0d14]">
       <Sidebar />
-      <main className="flex-1 pb-36 lg:pb-28 min-w-0">
+      <main className="flex-1 pb-[140px] lg:pb-28 min-w-0">
         <MobileHeader />
         <div className="px-4 sm:px-8 pt-4 sm:pt-8 pb-6">
           <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Songs</h1>
@@ -76,7 +76,7 @@ export default function SongsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search songs..."
-              className="w-full pl-12 pr-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 text-white placeholder-gray-500 text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-teal-500/50 text-white placeholder-gray-500 text-sm"
             />
           </div>
 

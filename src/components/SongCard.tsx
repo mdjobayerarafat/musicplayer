@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Song, Playlist } from '@/lib/types';
 import { usePlayerStore } from '@/store/playerStore';
 import { databases, DATABASE_ID, PLAYLISTS_COLLECTION_ID } from '@/lib/appwrite';
@@ -40,15 +40,19 @@ export default function SongCard({ song, songs = [], index = 0, onDelete, showDe
     }
   };
 
+  const parseSongIds = (songIds: any): string[] => {
+    if (Array.isArray(songIds)) return songIds;
+    if (typeof songIds === 'string') {
+      try { return JSON.parse(songIds); } catch { return []; }
+    }
+    return [];
+  };
+
   const handleAddToPlaylist = async (playlist: Playlist) => {
     try {
-      const updatedSongIds = [...new Set([...(playlist.songIds || []), song.$id])];
-      await databases.updateDocument(
-        DATABASE_ID,
-        PLAYLISTS_COLLECTION_ID,
-        playlist.$id,
-        { songIds: updatedSongIds }
-      );
+      const existing = parseSongIds(playlist.songIds);
+      const updatedSongIds = [...new Set([...existing, song.$id])];
+      await databases.updateDocument(DATABASE_ID, PLAYLISTS_COLLECTION_ID, playlist.$id, { songIds: JSON.stringify(updatedSongIds) });
       toast.success(`Added to "${playlist.name}"`);
       setShowPlaylistMenu(false);
     } catch (error: any) {
@@ -65,8 +69,8 @@ export default function SongCard({ song, songs = [], index = 0, onDelete, showDe
 
   return (
     <div
-      className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/[0.05] active:bg-white/[0.08] cursor-pointer ${
-        isCurrentSong ? 'bg-amber-500/10' : ''
+      className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:bg-white/[0.04] active:bg-white/[0.06] cursor-pointer ${
+        isCurrentSong ? 'bg-teal-500/10' : ''
       }`}
       onClick={handlePlay}
     >
@@ -77,11 +81,8 @@ export default function SongCard({ song, songs = [], index = 0, onDelete, showDe
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="w-[2.5px] bg-amber-500 rounded-full animate-pulse"
-                style={{
-                  height: `${10 + i * 4}px`,
-                  animationDelay: `${i * 0.15}s`,
-                }}
+                className="w-[2.5px] bg-teal-500 rounded-full animate-pulse"
+                style={{ height: `${10 + i * 4}px`, animationDelay: `${i * 0.15}s` }}
               />
             ))}
           </div>
@@ -96,17 +97,17 @@ export default function SongCard({ song, songs = [], index = 0, onDelete, showDe
       </div>
 
       {/* Cover */}
-      <div className="w-11 h-11 rounded-lg overflow-hidden bg-amber-600/10 flex-shrink-0 flex items-center justify-center">
+      <div className="w-11 h-11 rounded-lg overflow-hidden bg-teal-600/10 flex-shrink-0 flex items-center justify-center">
         {song.coverImage ? (
           <img src={song.coverImage} alt="" className="w-full h-full object-cover" />
         ) : (
-          <FaMusic className="text-amber-400/60 text-base" />
+          <FaMusic className="text-teal-400/60 text-base" />
         )}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className={`text-[13px] font-medium truncate leading-tight ${isCurrentSong ? 'text-amber-500' : 'text-white'}`}>
+        <p className={`text-[13px] font-medium truncate leading-tight ${isCurrentSong ? 'text-teal-400' : 'text-white'}`}>
           {song.title}
         </p>
         <p className="text-[11px] text-gray-500 truncate mt-0.5">{song.artist}</p>
@@ -119,40 +120,31 @@ export default function SongCard({ song, songs = [], index = 0, onDelete, showDe
 
       {/* Actions */}
       <div className="flex items-center gap-1 flex-shrink-0">
-        {/* Favorite */}
         <button
           onClick={(e) => { e.stopPropagation(); toggleFavorite(song.$id); }}
           className={`p-1.5 transition-colors opacity-0 group-hover:opacity-100 max-sm:opacity-70 ${
-            isFav ? 'text-amber-500 opacity-100' : 'text-gray-500 hover:text-amber-400'
+            isFav ? 'text-teal-400 opacity-100' : 'text-gray-500 hover:text-teal-400'
           }`}
         >
           <FaHeart className="text-xs" />
         </button>
 
-        {/* Add to Playlist */}
         <div className="relative">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowPlaylistMenu(!showPlaylistMenu);
-              if (!showPlaylistMenu) loadPlaylists();
-            }}
-            className="p-1.5 text-gray-500 hover:text-amber-400 transition-colors opacity-0 group-hover:opacity-100 max-sm:opacity-70"
+            onClick={(e) => { e.stopPropagation(); setShowPlaylistMenu(!showPlaylistMenu); if (!showPlaylistMenu) loadPlaylists(); }}
+            className="p-1.5 text-gray-500 hover:text-teal-400 transition-colors opacity-0 group-hover:opacity-100 max-sm:opacity-70"
           >
             <FaPlus className="text-xs" />
           </button>
 
           {showPlaylistMenu && (
-            <div
-              className="absolute right-0 top-8 z-50 w-52 glass rounded-xl p-2 shadow-2xl shadow-black/50"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="absolute right-0 top-8 z-50 w-52 glass rounded-xl p-2 shadow-2xl shadow-black/50" onClick={(e) => e.stopPropagation()}>
               <p className="text-xs text-gray-500 px-2 py-1">Add to playlist</p>
               {playlists.length === 0 ? (
                 <p className="text-xs text-gray-400 px-2 py-2">No playlists yet</p>
               ) : (
                 playlists.map((pl) => {
-                  const alreadyIn = pl.songIds?.includes(song.$id);
+                  const alreadyIn = parseSongIds(pl.songIds).includes(song.$id);
                   return (
                     <button
                       key={pl.$id}
@@ -166,17 +158,13 @@ export default function SongCard({ song, songs = [], index = 0, onDelete, showDe
                   );
                 })
               )}
-              <button
-                onClick={() => setShowPlaylistMenu(false)}
-                className="w-full text-xs text-gray-500 hover:text-white px-2 py-1 mt-1"
-              >
+              <button onClick={() => setShowPlaylistMenu(false)} className="w-full text-xs text-gray-500 hover:text-white px-2 py-1 mt-1">
                 Close
               </button>
             </div>
           )}
         </div>
 
-        {/* Delete */}
         {showDelete && onDelete && (
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(song.$id); }}

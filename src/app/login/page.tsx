@@ -42,22 +42,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 bg-[#0f0f14]">
-      <div className="absolute inset-0 gradient-primary opacity-15" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[250px] sm:w-[400px] md:w-[600px] h-[250px] sm:h-[400px] md:h-[600px] bg-amber-600/20 rounded-full blur-[80px] sm:blur-[120px]" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 bg-[#0d0d14]">
+      {/* Background glows */}
+      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-teal-600/15 rounded-full blur-[120px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-teal-500/10 rounded-full blur-[100px]" />
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-5 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 mb-4 shadow-lg shadow-amber-500/20">
+        {/* Logo */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 mb-4 shadow-lg shadow-teal-500/20">
             <FaMusic className="text-white text-2xl sm:text-3xl" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">
-            <span className="text-amber-500">Free</span>
-            <span className="text-white">buff</span>
+            <span className="text-teal-400">Rhythm</span>
+            <span className="text-white">Tune</span>
           </h1>
           <p className="text-gray-400 mt-2 text-sm sm:text-base">Your music, your way</p>
         </div>
 
+        {/* Form Card */}
         <div className="glass rounded-2xl p-6 sm:p-8">
           <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-6 text-center">
             {isLogin ? 'Welcome Back' : 'Create Account'}
@@ -71,7 +74,7 @@ export default function LoginPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all text-white placeholder-gray-500 text-sm"
+                  className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.05] rounded-xl focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all text-white placeholder-gray-500 text-sm"
                   placeholder="Your name"
                 />
               </div>
@@ -83,7 +86,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all text-white placeholder-gray-500 text-sm"
+                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.05] rounded-xl focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all text-white placeholder-gray-500 text-sm"
                 placeholder="your@email.com"
                 required
               />
@@ -96,7 +99,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all text-white placeholder-gray-500 pr-12 text-sm"
+                  className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.05] rounded-xl focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/20 transition-all text-white placeholder-gray-500 pr-12 text-sm"
                   placeholder="••••••••"
                   required
                   minLength={8}
@@ -114,7 +117,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-700 disabled:cursor-not-allowed rounded-xl font-semibold transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2 shadow-lg shadow-amber-500/20 text-black"
+              className="w-full py-3 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-700 disabled:cursor-not-allowed rounded-xl font-semibold transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2 shadow-lg shadow-teal-500/20 text-black"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -133,7 +136,7 @@ export default function LoginPage() {
           <div className="mt-5 sm:mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-amber-500 hover:text-amber-400 transition-colors text-sm"
+              className="text-teal-400 hover:text-teal-300 transition-colors text-sm"
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>

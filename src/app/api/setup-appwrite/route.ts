@@ -10,6 +10,7 @@ const albumsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_ALBUMS_COLLECTION_ID
 const playlistsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_PLAYLISTS_COLLECTION_ID || 'playlists';
 const playlistSongsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_PLAYLIST_SONGS_COLLECTION_ID || 'playlist_songs';
 const storageBucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ID || 'music_files';
+const imageStorageBucketId = process.env.NEXT_PUBLIC_APPWRITE_IMAGE_STORAGE_BUCKET_ID || 'cover_images';
 
 async function createCollectionIfNotExists(
   databases: Databases,
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       { key: 'position', type: 'integer', required: false },
     ]);
 
-    // Storage Bucket
+    // Storage Bucket for Music Files
     const storage = new Storage(client);
     try {
       await storage.getBucket(storageBucketId);
@@ -155,6 +156,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Storage Bucket for Cover Images
+    try {
+      await storage.getBucket(imageStorageBucketId);
+    } catch {
+      try {
+        await storage.createBucket({
+          bucketId: imageStorageBucketId,
+          name: 'Cover Images',
+          permissions: [
+            Permission.read(Role.any()),
+            Permission.write(Role.users()),
+            Permission.create(Role.users()),
+            Permission.delete(Role.users()),
+            Permission.update(Role.users()),
+          ],
+          fileSecurity: false,
+          enabled: true,
+          maximumFileSize: 10485760, // 10MB
+          allowedFileExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+          compression: 'none' as any,
+          encryption: false,
+          antivirus: false,
+          transformations: true,
+        });
+      } catch (e: any) {
+        if (!e.message?.includes('already exists')) {
+          console.error('Error creating image storage bucket:', e.message);
+          throw new Error(
+            `Failed to create image storage bucket "${imageStorageBucketId}". ` +
+            `Error: ${e.message}`
+          );
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Appwrite setup complete',
@@ -163,6 +199,7 @@ export async function POST(request: NextRequest) {
       albumsCollectionId,
       playlistsCollectionId,
       bucketId: storageBucketId,
+      imageBucketId: imageStorageBucketId,
     });
   } catch (error: any) {
     console.error('Setup error:', error);

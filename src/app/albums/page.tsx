@@ -50,10 +50,10 @@ export default function AlbumsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f0f14]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0d0d14]">
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-amber-500/20 rounded-full" />
-          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-amber-500 rounded-full animate-spin" />
+          <div className="w-16 h-16 border-4 border-teal-500/20 rounded-full" />
+          <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-teal-500 rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -62,9 +62,9 @@ export default function AlbumsPage() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#0f0f14]">
+    <div className="flex min-h-screen bg-[#0d0d14]">
       <Sidebar />
-      <main className="flex-1 pb-36 lg:pb-28 min-w-0">
+      <main className="flex-1 pb-[140px] lg:pb-28 min-w-0">
         <MobileHeader />
         <MobileHeader />
         <div className="px-4 sm:px-8 pt-4 sm:pt-8 pb-6">
@@ -77,7 +77,7 @@ export default function AlbumsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search albums..."
-              className="w-full pl-12 pr-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 text-white placeholder-gray-500 text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-teal-500/50 text-white placeholder-gray-500 text-sm"
             />
           </div>
 
@@ -101,15 +101,15 @@ export default function AlbumsPage() {
                   href={`/albums/${album.$id}`}
                   className="group bg-white/[0.03] hover:bg-white/[0.06] rounded-2xl p-3.5 transition-all cursor-pointer active:scale-[0.97]"
                 >
-                  <div className="aspect-square rounded-xl bg-amber-600/10 overflow-hidden mb-3 relative">
+                  <div className="aspect-square rounded-xl bg-teal-600/10 overflow-hidden mb-3 relative">
                     {album.coverImage ? (
                       <img src={album.coverImage} alt={album.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-600/15 to-orange-700/15">
-                        <FaCompactDisc className="text-amber-400/40 text-3xl" />
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-600/15 to-orange-700/15">
+                        <FaCompactDisc className="text-teal-400/40 text-3xl" />
                       </div>
                     )}
-                    <div className="absolute bottom-2.5 right-2.5 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-lg shadow-amber-500/30">
+                    <div className="absolute bottom-2.5 right-2.5 w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-lg shadow-teal-500/30">
                       <FaPlay className="text-black text-sm ml-0.5" />
                     </div>
                   </div>
