@@ -79,7 +79,7 @@ export default function HomePage() {
           <div className="absolute inset-0 gradient-primary opacity-30" />
           <div className="absolute top-0 right-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-rose-600/20 rounded-full blur-[100px] -translate-y-1/2" />
 
-          <div className="relative z-10 px-4 sm:px-8 pt-16 lg:pt-12 pb-4">
+          <div className="relative z-10 px-4 sm:px-8 pt-20 lg:pt-12 pb-4">
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-2">
               Welcome back, <span className="text-rose-400">{user.name?.split(' ')[0] || 'Music Lover'}</span>
             </h1>
@@ -108,7 +108,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="px-4 sm:px-8 py-6 sm:py-8">
+        <div className="px-4 sm:px-8 py-6 sm:py-8 pt-4">
           {/* Quick Categories */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-8 sm:mb-10">
             {[

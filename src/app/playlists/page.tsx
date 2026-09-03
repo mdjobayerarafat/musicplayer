@@ -37,7 +37,7 @@ export default function PlaylistsPage() {
       <Sidebar />
 
       <main className="flex-1 pb-24">
-        <div className="px-8 py-8">
+        <div className="px-4 sm:px-8 pt-20 lg:pt-8 pb-6 sm:py-8">
           <h1 className="text-3xl font-bold mb-8">Playlists</h1>
 
           <div className="text-center py-20">

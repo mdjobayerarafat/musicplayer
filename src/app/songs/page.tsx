@@ -61,7 +61,7 @@ export default function SongsPage() {
     <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
       <main className="flex-1 pb-24 min-w-0">
-        <div className="px-4 sm:px-8 pt-16 lg:pt-8 py-6 sm:py-8">
+        <div className="px-4 sm:px-8 pt-20 lg:pt-8 pb-6 sm:py-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Songs</h1>
 
           <div className="relative mb-6 max-w-md">
