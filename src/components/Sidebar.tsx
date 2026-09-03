@@ -8,14 +8,13 @@ import { databases, DATABASE_ID, PLAYLISTS_COLLECTION_ID } from '@/lib/appwrite'
 import { Playlist } from '@/lib/types';
 import {
   FaHome, FaMusic, FaListUl, FaSignOutAlt,
-  FaHeart, FaSearch, FaChevronDown, FaChevronRight,
-  FaUser, FaCog, FaFire, FaPodcast, FaMicrophone,
+  FaSearch, FaChevronDown, FaChevronRight, FaCompactDisc,
 } from 'react-icons/fa';
 
 const navItems = [
   { href: '/', label: 'Home', icon: FaHome },
-  { href: '/songs', label: 'Artists', icon: FaMusic },
-  { href: '/albums', label: 'Albums', icon: FaFire },
+  { href: '/songs', label: 'Songs', icon: FaMusic },
+  { href: '/albums', label: 'Albums', icon: FaCompactDisc },
   { href: '/playlists', label: 'Playlists', icon: FaListUl },
 ];
 
@@ -69,7 +68,7 @@ export default function Sidebar() {
       <nav className="flex-1 px-3 py-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { databases, DATABASE_ID, ALBUMS_COLLECTION_ID } from '@/lib/appwrite';
+import { Query } from 'appwrite';
 import { Album } from '@/lib/types';
 import Sidebar from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
@@ -33,8 +34,18 @@ export default function AlbumsPage() {
 
   const loadAlbums = async () => {
     try {
-      const response = await databases.listDocuments(DATABASE_ID, ALBUMS_COLLECTION_ID);
-      setAlbums(response.documents as unknown as Album[]);
+      const allDocs: any[] = [];
+      let offset = 0;
+      while (true) {
+        const response = await databases.listDocuments(DATABASE_ID, ALBUMS_COLLECTION_ID, [
+          Query.limit(100),
+          Query.offset(offset),
+        ]);
+        allDocs.push(...response.documents);
+        if (allDocs.length >= response.total) break;
+        offset += 100;
+      }
+      setAlbums(allDocs as unknown as Album[]);
     } catch (error) {
       console.error('Failed to load albums:', error);
     } finally {

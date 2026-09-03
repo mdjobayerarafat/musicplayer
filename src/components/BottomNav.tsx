@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { usePlayerStore } from '@/store/playerStore';
-import { FaHome, FaHeart, FaListUl, FaCog } from 'react-icons/fa';
+import { FaHome, FaMusic, FaCompactDisc, FaListUl } from 'react-icons/fa';
 
 const navItems = [
   { href: '/', label: 'Home', icon: FaHome },
-  { href: '/songs', label: 'Favorites', icon: FaHeart },
+  { href: '/songs', label: 'Songs', icon: FaMusic },
+  { href: '/albums', label: 'Albums', icon: FaCompactDisc },
   { href: '/playlists', label: 'Lists', icon: FaListUl },
-  { href: '/admin', label: 'Settings', icon: FaCog },
 ];
 
 export default function BottomNav() {
@@ -29,7 +29,7 @@ export default function BottomNav() {
       <div className="flex items-center justify-around px-1 py-1.5">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}

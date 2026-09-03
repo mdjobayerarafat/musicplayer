@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { databases, DATABASE_ID, SONGS_COLLECTION_ID, ALBUMS_COLLECTION_ID } from '@/lib/appwrite';
+import { Query } from 'appwrite';
 import { Song, Album } from '@/lib/types';
 import { usePlayerStore } from '@/store/playerStore';
 import Sidebar from '@/components/Sidebar';
@@ -50,14 +51,29 @@ export default function HomePage() {
     if (user) loadData();
   }, [user]);
 
+  const fetchAllDocuments = async (collectionId: string): Promise<any[]> => {
+    const allDocs: any[] = [];
+    let offset = 0;
+    while (true) {
+      const response = await databases.listDocuments(DATABASE_ID, collectionId, [
+        Query.limit(100),
+        Query.offset(offset),
+      ]);
+      allDocs.push(...response.documents);
+      if (allDocs.length >= response.total) break;
+      offset += 100;
+    }
+    return allDocs;
+  };
+
   const loadData = async () => {
     try {
-      const [songsRes, albumsRes] = await Promise.allSettled([
-        databases.listDocuments(DATABASE_ID, SONGS_COLLECTION_ID),
-        databases.listDocuments(DATABASE_ID, ALBUMS_COLLECTION_ID),
+      const [songsDocs, albumsDocs] = await Promise.allSettled([
+        fetchAllDocuments(SONGS_COLLECTION_ID),
+        fetchAllDocuments(ALBUMS_COLLECTION_ID),
       ]);
-      if (songsRes.status === 'fulfilled') setSongs(songsRes.value.documents as unknown as Song[]);
-      if (albumsRes.status === 'fulfilled') setAlbums(albumsRes.value.documents as unknown as Album[]);
+      if (songsDocs.status === 'fulfilled') setSongs(songsDocs.value as unknown as Song[]);
+      if (albumsDocs.status === 'fulfilled') setAlbums(albumsDocs.value as unknown as Album[]);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
