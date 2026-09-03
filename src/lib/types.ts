@@ -14,6 +14,18 @@ export interface Song {
   isAdmin: boolean;
 }
 
+export interface Playlist {
+  $id: string;
+  $collectionId?: string;
+  $databaseId?: string;
+  name: string;
+  description: string;
+  coverImage: string;
+  userId: string;
+  songIds: string[];
+  createdAt: string;
+}
+
 export interface Album {
   $id: string;
   $collectionId?: string;
@@ -30,4 +42,9 @@ export interface User {
   name: string;
   email: string;
   isAdmin: boolean;
+}
+
+export interface RecentlyPlayed {
+  songId: string;
+  playedAt: number;
 }

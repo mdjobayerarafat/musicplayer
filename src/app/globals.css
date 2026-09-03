@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #e11d48;
-  --primary-dark: #be123c;
-  --primary-light: #fb7185;
-  --bg-dark: #0a0a0a;
-  --bg-card: #1a1a1a;
-  --bg-card-hover: #252525;
+  --primary: #f59e0b;
+  --primary-dark: #d97706;
+  --primary-light: #fbbf24;
+  --bg-dark: #0f0f14;
+  --bg-surface: #1a1a24;
+  --bg-card: #1e1e2a;
+  --bg-card-hover: #2a2a38;
   --text-primary: #ffffff;
-  --text-secondary: #a3a3a3;
+  --text-secondary: #a3a3b3;
+  --accent-orange: #f59e0b;
+  --accent-teal: #14b8a6;
 }
 
 * {
@@ -43,26 +46,26 @@ body {
 
 /* Gradient backgrounds */
 .gradient-primary {
-  background: linear-gradient(135deg, #e11d48 0%, #9f1239 50%, #4c0519 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #92400e 100%);
 }
 
 .gradient-card {
-  background: linear-gradient(145deg, rgba(30, 30, 30, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+  background: linear-gradient(145deg, rgba(30, 30, 42, 0.9) 0%, rgba(20, 20, 28, 0.95) 100%);
   backdrop-filter: blur(10px);
 }
 
 /* Album art ring */
 .art-ring {
-  background: conic-gradient(from 0deg, #e11d48, #4c0519, #e11d48);
+  background: conic-gradient(from 0deg, #f59e0b, #92400e, #f59e0b);
   padding: 3px;
   border-radius: 50%;
 }
 
 /* Glass effect */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(26, 26, 36, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Range input styling */
@@ -85,9 +88,9 @@ input[type="range"]::-webkit-slider-thumb {
   height: 14px;
   width: 14px;
   border-radius: 50%;
-  background: #e11d48;
+  background: #f59e0b;
   margin-top: -5px;
-  box-shadow: 0 0 10px rgba(225, 29, 72, 0.5);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
 }
 
 input[type="range"]::-moz-range-track {
@@ -100,9 +103,9 @@ input[type="range"]::-moz-range-thumb {
   height: 14px;
   width: 14px;
   border-radius: 50%;
-  background: #e11d48;
+  background: #f59e0b;
   border: none;
-  box-shadow: 0 0 10px rgba(225, 29, 72, 0.5);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
 }
 
 /* Pulse animation for playing indicator */
@@ -125,7 +128,7 @@ input[type="range"]::-moz-range-thumb {
 
 /* Toast styling */
 .toast-custom {
-  background: #1a1a1a !important;
+  background: #1a1a24 !important;
   color: #fff !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
@@ -142,23 +145,9 @@ input[type="range"]::-moz-range-thumb {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Responsive helpers */
-@media (max-width: 1023px) {
-  .sidebar-offset {
-    padding-left: 0;
-  }
-}
-
 /* Safe area for iPhone notch */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Bottom nav spacing on mobile */
-@media (max-width: 1023px) {
-  .mobile-bottom-padding {
-    padding-bottom: 80px;
-  }
 }
 
 /* Hide scrollbar */
@@ -168,4 +157,64 @@ input[type="range"]::-moz-range-thumb {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Card hover glow */
+.card-glow:hover {
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.1);
+}
+
+/* Song card overlay */
+.song-card-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%);
+}
+
+/* ── Touch device: show action buttons instead of hover-only ── */
+@media (hover: none) and (pointer: coarse) {
+  /* On touch devices, always show heart/add buttons on song cards */
+  .group .touch-show {
+    opacity: 1 !important;
+  }
+  /* Show play overlay on cards always */
+  .group .touch-play-overlay {
+    opacity: 0.85 !important;
+  }
+}
+
+/* ── Responsive FullPlayer ── */
+@media (max-width: 380px) {
+  .fullplayer-controls {
+    gap: 1.5rem !important;
+  }
+  .fullplayer-waveform {
+    gap: 2px !important;
+  }
+}
+
+/* ── Bottom padding for mini player + bottom nav ── */
+@media (max-width: 1023px) {
+  .page-bottom-pad {
+    padding-bottom: 180px !important;
+  }
+}
+
+/* ── Hero carousel responsive ── */
+@media (max-width: 360px) {
+  .hero-carousel {
+    height: 220px !important;
+  }
+}
+
+/* ── Touch-friendly tap targets ── */
+@media (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+}
+
+/* ── Responsive overflow protection ── */
+.overflow-x-safe {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }

@@ -42,16 +42,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4">
-      <div className="absolute inset-0 gradient-primary opacity-20" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-rose-600/30 rounded-full blur-[120px]" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 bg-[#0f0f14]">
+      <div className="absolute inset-0 gradient-primary opacity-15" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[250px] sm:w-[400px] md:w-[600px] h-[250px] sm:h-[400px] md:h-[600px] bg-amber-600/20 rounded-full blur-[80px] sm:blur-[120px]" />
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-rose-600/20 border border-rose-500/30 mb-4 shadow-lg shadow-rose-600/10">
-            <FaMusic className="text-rose-500 text-2xl sm:text-3xl" />
+        <div className="text-center mb-5 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 mb-4 shadow-lg shadow-amber-500/20">
+            <FaMusic className="text-white text-2xl sm:text-3xl" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">Freebuff</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            <span className="text-amber-500">Free</span>
+            <span className="text-white">buff</span>
+          </h1>
           <p className="text-gray-400 mt-2 text-sm sm:text-base">Your music, your way</p>
         </div>
 
@@ -68,7 +71,7 @@ export default function LoginPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all text-white placeholder-gray-500"
+                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all text-white placeholder-gray-500 text-sm"
                   placeholder="Your name"
                 />
               </div>
@@ -80,7 +83,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all text-white placeholder-gray-500"
+                className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all text-white placeholder-gray-500 text-sm"
                 placeholder="your@email.com"
                 required
               />
@@ -93,7 +96,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all text-white placeholder-gray-500 pr-12"
+                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all text-white placeholder-gray-500 pr-12 text-sm"
                   placeholder="••••••••"
                   required
                   minLength={8}
@@ -111,7 +114,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-800 disabled:cursor-not-allowed rounded-xl font-semibold transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2 shadow-lg shadow-rose-600/20"
+              className="w-full py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-700 disabled:cursor-not-allowed rounded-xl font-semibold transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2 shadow-lg shadow-amber-500/20 text-black"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -130,7 +133,7 @@ export default function LoginPage() {
           <div className="mt-5 sm:mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-rose-400 hover:text-rose-300 transition-colors text-sm"
+              className="text-amber-500 hover:text-amber-400 transition-colors text-sm"
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>

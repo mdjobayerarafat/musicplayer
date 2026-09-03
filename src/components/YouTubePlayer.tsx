@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 
+// ── YouTube IFrame API loader (used as fallback) ──────────────────────────
 let ytApiLoaded = false;
 let ytApiLoading = false;
 const ytApiCallbacks: Array<() => void> = [];
@@ -45,10 +46,18 @@ function isMobileDevice(): boolean {
   );
 }
 
+/**
+ * AudioPlayer — plays from the Appwrite bucket audioUrl via HTML5 <audio>.
+ * Falls back to YouTube iframe when no audioUrl is available.
+ */
 export default function YouTubePlayer() {
-  const playerRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentUrlRef = useRef<string>('');
+
+  // YouTube refs (fallback mode)
+  const ytPlayerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const readyRef = useRef(false);
+  const ytReadyRef = useRef(false);
   const lastVideoId = useRef<string>('');
   const timeUpdateInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -64,33 +73,126 @@ export default function YouTubePlayer() {
     nextSong,
   } = usePlayerStore();
 
+  const audioUrl = currentSong?.audioUrl || '';
   const videoId = currentSong?.youtubeVideoId || '';
 
-  // Skip YouTube iframe when:
-  // 1. On mobile (MobileAudioPlayer handles it)
-  // 2. Song has an audioUrl (Appwrite-hosted MP3 — MobileAudioPlayer handles it)
-  const hasAudioUrl = !!(currentSong?.audioUrl && currentSong.audioUrl.trim());
-  const shouldUseIframe = !mobile && !hasAudioUrl;
+  // ── Mode detection ─────────────────────────────────────────────────────
+  // Prefer audioUrl (Appwrite bucket) — only fall back to YouTube if unavailable
+  const useAudio = !!audioUrl;
 
+  // ── HTML5 Audio mode (Appwrite bucket) ──────────────────────────────────
   useEffect(() => {
-    if (!shouldUseIframe) return;
+    if (mobile || !useAudio) return;
+
+    if (!audioRef.current) {
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audioRef.current = audio;
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+    };
+  }, [mobile, useAudio]);
+
+  // Load and play from Appwrite bucket
+  useEffect(() => {
+    if (mobile || !useAudio || !audioRef.current || !currentSong) return;
+
+    const audio = audioRef.current;
+    const src = audioUrl;
+
+    // Don't reload if already playing this URL
+    if (currentUrlRef.current === src && !audio.ended) {
+      if (isPlaying) audio.play().catch(() => {});
+      else audio.pause();
+      return;
+    }
+
+    currentUrlRef.current = src;
+    audio.src = src;
+    audio.load();
+
+    if (isPlaying) {
+      audio.play().catch(() => {
+        // Autoplay blocked — waiting for user gesture
+      });
+    }
+  }, [currentSong?.audioUrl, currentSong?.$id]);
+
+  // Play/pause sync for audio mode
+  useEffect(() => {
+    if (mobile || !useAudio || !audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.play().catch(() => {});
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying, mobile, useAudio]);
+
+  // Volume sync for audio mode
+  useEffect(() => {
+    if (mobile || !useAudio || !audioRef.current) return;
+    audioRef.current.volume = volume;
+  }, [volume, mobile, useAudio]);
+
+  // Seek sync for audio mode
+  useEffect(() => {
+    if (mobile || !useAudio || !audioRef.current) return;
+    const diff = Math.abs(audioRef.current.currentTime - currentTime);
+    if (diff > 2) {
+      audioRef.current.currentTime = currentTime;
+    }
+  }, [currentTime, mobile, useAudio]);
+
+  // Audio events for bucket mode
+  useEffect(() => {
+    if (mobile || !useAudio || !audioRef.current) return;
+
+    const audio = audioRef.current;
+
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleEnded = () => nextSong();
+    const handleError = (e: Event) => console.error('Audio player error:', e);
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [mobile, useAudio, nextSong, setCurrentTime, setDuration]);
+
+  // ── YouTube IFrame mode (fallback when no audioUrl) ─────────────────────
+  useEffect(() => {
+    if (mobile || useAudio) return;
 
     let mounted = true;
 
     async function init() {
       await loadYtApi();
       if (!mounted || !containerRef.current) return;
-      if (playerRef.current) return;
+      if (ytPlayerRef.current) return;
 
       const YT = (window as any).YT;
       if (!YT?.Player) {
         setTimeout(() => {
-          if (mounted && containerRef.current && !playerRef.current) init();
+          if (mounted && containerRef.current && !ytPlayerRef.current) init();
         }, 500);
         return;
       }
 
-      playerRef.current = new YT.Player('yt-player', {
+      ytPlayerRef.current = new YT.Player('yt-player', {
         height: '0',
         width: '0',
         playerVars: {
@@ -104,7 +206,7 @@ export default function YouTubePlayer() {
         },
         events: {
           onReady: () => {
-            readyRef.current = true;
+            ytReadyRef.current = true;
             if (videoId && mounted) loadVideo(videoId);
           },
           onStateChange: (event: any) => {
@@ -124,17 +226,17 @@ export default function YouTubePlayer() {
       mounted = false;
       if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
     };
-  }, [shouldUseIframe]);
+  }, [useAudio]); // Re-init when mode changes
 
   const loadVideo = useCallback((id: string) => {
-    if (!playerRef.current || !readyRef.current) return;
+    if (!ytPlayerRef.current || !ytReadyRef.current) return;
     if (!id || id.length !== 11) return;
     if (lastVideoId.current === id) return;
 
     lastVideoId.current = id;
 
     try {
-      playerRef.current.loadVideoById({ videoId: id });
+      ytPlayerRef.current.loadVideoById({ videoId: id });
     } catch (e) {
       console.warn('Failed to load video:', id, e);
     }
@@ -142,10 +244,10 @@ export default function YouTubePlayer() {
     if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
 
     timeUpdateInterval.current = setInterval(() => {
-      if (playerRef.current && readyRef.current) {
+      if (ytPlayerRef.current && ytReadyRef.current) {
         try {
-          const ct = playerRef.current.getCurrentTime();
-          const dur = playerRef.current.getDuration();
+          const ct = ytPlayerRef.current.getCurrentTime();
+          const dur = ytPlayerRef.current.getDuration();
           if (ct !== undefined && ct !== null) setCurrentTime(ct);
           if (dur && dur > 0) setDuration(dur);
         } catch (_) {}
@@ -154,31 +256,38 @@ export default function YouTubePlayer() {
   }, [setCurrentTime, setDuration]);
 
   useEffect(() => {
-    if (shouldUseIframe && videoId && videoId !== lastVideoId.current) {
-      if (readyRef.current) loadVideo(videoId);
+    if (useAudio || mobile) return;
+    if (videoId && videoId !== lastVideoId.current) {
+      if (ytReadyRef.current) loadVideo(videoId);
     }
-  }, [videoId, loadVideo, shouldUseIframe]);
+  }, [videoId, loadVideo, useAudio, mobile]);
 
   useEffect(() => {
-    if (!playerRef.current || !readyRef.current || !shouldUseIframe) return;
+    if (useAudio || mobile) return;
+    if (!ytPlayerRef.current || !ytReadyRef.current) return;
     try {
-      if (isPlaying) playerRef.current.playVideo();
-      else playerRef.current.pauseVideo();
+      if (isPlaying) ytPlayerRef.current.playVideo();
+      else ytPlayerRef.current.pauseVideo();
     } catch (_) {}
-  }, [isPlaying, shouldUseIframe]);
+  }, [isPlaying, useAudio, mobile]);
 
   useEffect(() => {
-    if (!playerRef.current || !readyRef.current || !shouldUseIframe) return;
-    try { playerRef.current.setVolume(volume * 100); } catch (_) {}
-  }, [volume, shouldUseIframe]);
+    if (useAudio || mobile) return;
+    if (!ytPlayerRef.current || !ytReadyRef.current) return;
+    try { ytPlayerRef.current.setVolume(volume * 100); } catch (_) {}
+  }, [volume, useAudio, mobile]);
 
   useEffect(() => {
-    if (!playerRef.current || !readyRef.current || !shouldUseIframe) return;
+    if (useAudio || mobile) return;
+    if (!ytPlayerRef.current || !ytReadyRef.current) return;
     try {
-      const pt = playerRef.current.getCurrentTime();
-      if (Math.abs(pt - currentTime) > 3) playerRef.current.seekTo(currentTime, true);
+      const pt = ytPlayerRef.current.getCurrentTime();
+      if (Math.abs(pt - currentTime) > 3) ytPlayerRef.current.seekTo(currentTime, true);
     } catch (_) {}
-  }, [currentTime, shouldUseIframe]);
+  }, [currentTime, useAudio, mobile]);
+
+  // Render YouTube iframe container (only when in YouTube fallback mode)
+  if (useAudio || mobile) return null;
 
   return (
     <div ref={containerRef} className="absolute opacity-0 pointer-events-none" style={{ width: 0, height: 0 }}>

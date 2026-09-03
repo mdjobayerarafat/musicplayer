@@ -11,6 +11,8 @@ interface PlayerState {
   isShuffled: boolean;
   repeatMode: 'off' | 'all' | 'one';
   isMinimized: boolean;
+  recentlyPlayed: string[];
+  favorites: string[];
 
   setCurrentSong: (song: Song) => void;
   setQueue: (songs: Song[]) => void;
@@ -28,6 +30,43 @@ interface PlayerState {
   cycleRepeat: () => void;
   setMinimized: (minimized: boolean) => void;
   clearQueue: () => void;
+  addToRecentlyPlayed: (songId: string) => void;
+  toggleFavorite: (songId: string) => void;
+  isFavorite: (songId: string) => boolean;
+}
+
+const RECENTLY_PLAYED_KEY = 'freebuff_recently_played';
+const FAVORITES_KEY = 'freebuff_favorites';
+const MAX_RECENT = 50;
+
+function loadRecentlyPlayed(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(RECENTLY_PLAYED_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveRecentlyPlayed(ids: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(ids));
+  } catch {}
+}
+
+function loadFavorites(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(FAVORITES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveFavorites(ids: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(ids));
+  } catch {}
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -40,8 +79,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isShuffled: false,
   repeatMode: 'off',
   isMinimized: false,
+  recentlyPlayed: loadRecentlyPlayed(),
+  favorites: loadFavorites(),
 
-  setCurrentSong: (song) => set({ currentSong: song, isPlaying: true }),
+  setCurrentSong: (song) => {
+    set({ currentSong: song, isPlaying: true });
+    get().addToRecentlyPlayed(song.$id);
+  },
   setQueue: (songs) => set({ queue: songs }),
   addToQueue: (song) => set((state) => ({ queue: [...state.queue, song] })),
   removeFromQueue: (songId) => set((state) => ({
@@ -76,7 +120,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       nextIndex = currentIndex + 1;
     }
 
-    set({ currentSong: queue[nextIndex], currentTime: 0, isPlaying: true });
+    const nextSongData = queue[nextIndex];
+    set({ currentSong: nextSongData, currentTime: 0, isPlaying: true });
+    get().addToRecentlyPlayed(nextSongData.$id);
   },
   prevSong: () => {
     const { queue, currentSong, currentTime } = get();
@@ -90,7 +136,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const currentIndex = queue.findIndex((s) => s.$id === currentSong.$id);
     if (currentIndex <= 0) return;
 
-    set({ currentSong: queue[currentIndex - 1], currentTime: 0, isPlaying: true });
+    const prevSongData = queue[currentIndex - 1];
+    set({ currentSong: prevSongData, currentTime: 0, isPlaying: true });
+    get().addToRecentlyPlayed(prevSongData.$id);
   },
   toggleShuffle: () => set((state) => ({ isShuffled: !state.isShuffled })),
   cycleRepeat: () => set((state) => {
@@ -100,4 +148,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   }),
   setMinimized: (minimized) => set({ isMinimized: minimized }),
   clearQueue: () => set({ queue: [], currentSong: null, isPlaying: false }),
+  addToRecentlyPlayed: (songId: string) => {
+    const current = get().recentlyPlayed;
+    const updated = [songId, ...current.filter((id) => id !== songId)].slice(0, MAX_RECENT);
+    set({ recentlyPlayed: updated });
+    saveRecentlyPlayed(updated);
+  },
+  toggleFavorite: (songId: string) => {
+    const current = get().favorites;
+    const isFav = current.includes(songId);
+    const updated = isFav
+      ? current.filter((id) => id !== songId)
+      : [...current, songId];
+    set({ favorites: updated });
+    saveFavorites(updated);
+  },
+  isFavorite: (songId: string) => {
+    return get().favorites.includes(songId);
+  },
 }));

@@ -7,7 +7,60 @@ const apiKey = process.env.APPWRITE_API_KEY || '';
 const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || 'music_db';
 const songsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_SONGS_COLLECTION_ID || 'songs';
 const albumsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_ALBUMS_COLLECTION_ID || 'albums';
+const playlistsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_PLAYLISTS_COLLECTION_ID || 'playlists';
+const playlistSongsCollectionId = process.env.NEXT_PUBLIC_APPWRITE_PLAYLIST_SONGS_COLLECTION_ID || 'playlist_songs';
 const storageBucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ID || 'music_files';
+
+async function createCollectionIfNotExists(
+  databases: Databases,
+  databaseId: string,
+  collectionId: string,
+  name: string,
+  attributes: Array<{ key: string; type: string; size?: number; required?: boolean }>
+) {
+  try {
+    await databases.createCollection(
+      databaseId,
+      collectionId,
+      name,
+      [
+        Permission.read(Role.any()),
+        Permission.write(Role.users()),
+        Permission.create(Role.users()),
+        Permission.delete(Role.users()),
+        Permission.update(Role.users()),
+      ]
+    );
+  } catch (e: any) {
+    if (!e.message?.includes('already exists')) throw e;
+  }
+
+  for (const attr of attributes) {
+    try {
+      if (attr.type === 'string') {
+        await databases.createStringAttribute(
+          databaseId, collectionId, attr.key, attr.size || 255, attr.required || false
+        );
+      } else if (attr.type === 'integer') {
+        await databases.createIntegerAttribute(
+          databaseId, collectionId, attr.key, attr.required || false
+        );
+      } else if (attr.type === 'datetime') {
+        await databases.createDatetimeAttribute(
+          databaseId, collectionId, attr.key, attr.required || false
+        );
+      } else if (attr.type === 'boolean') {
+        await databases.createBooleanAttribute(
+          databaseId, collectionId, attr.key, attr.required || false
+        );
+      }
+    } catch (e: any) {
+      if (!e.message?.includes('already exists')) {
+        console.error(`Error creating attribute ${attr.key}:`, e.message);
+      }
+    }
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,33 +75,11 @@ export async function POST(request: NextRequest) {
     try {
       await databases.create(databaseId, 'Music Database');
     } catch (e: any) {
-      if (!e.message?.includes('already exists')) {
-        throw e;
-      }
+      if (!e.message?.includes('already exists')) throw e;
     }
 
-    // Create Songs collection
-    try {
-      await databases.createCollection(
-        databaseId,
-        songsCollectionId,
-        'Songs',
-        [
-          Permission.read(Role.any()),
-          Permission.write(Role.users()),
-          Permission.create(Role.users()),
-          Permission.delete(Role.users()),
-          Permission.update(Role.users()),
-        ]
-      );
-    } catch (e: any) {
-      if (!e.message?.includes('already exists')) {
-        throw e;
-      }
-    }
-
-    // Songs collection attributes
-    const songAttributes = [
+    // Songs collection
+    await createCollectionIfNotExists(databases, databaseId, songsCollectionId, 'Songs', [
       { key: 'title', type: 'string', size: 255, required: true },
       { key: 'artist', type: 'string', size: 255, required: true },
       { key: 'albumId', type: 'string', size: 255, required: false },
@@ -58,104 +89,37 @@ export async function POST(request: NextRequest) {
       { key: 'youtubeVideoId', type: 'string', size: 50, required: false },
       { key: 'duration', type: 'integer', required: false },
       { key: 'createdAt', type: 'datetime', required: false },
-    ];
+    ]);
 
-    for (const attr of songAttributes) {
-      try {
-        if (attr.type === 'string') {
-          await databases.createStringAttribute(
-            databaseId,
-            songsCollectionId,
-            attr.key,
-            attr.size || 255,
-            attr.required || false
-          );
-        } else if (attr.type === 'integer') {
-          await databases.createIntegerAttribute(
-            databaseId,
-            songsCollectionId,
-            attr.key,
-            attr.required || false
-          );
-        } else if (attr.type === 'datetime') {
-          await databases.createDatetimeAttribute(
-            databaseId,
-            songsCollectionId,
-            attr.key,
-            attr.required || false
-          );
-        }
-      } catch (e: any) {
-        if (!e.message?.includes('already exists')) {
-          console.error(`Error creating attribute ${attr.key}:`, e.message);
-        }
-      }
-    }
-
-    // Create Albums collection
-    try {
-      await databases.createCollection(
-        databaseId,
-        albumsCollectionId,
-        'Albums',
-        [
-          Permission.read(Role.any()),
-          Permission.write(Role.users()),
-          Permission.create(Role.users()),
-          Permission.delete(Role.users()),
-          Permission.update(Role.users()),
-        ]
-      );
-    } catch (e: any) {
-      if (!e.message?.includes('already exists')) {
-        throw e;
-      }
-    }
-
-    // Albums collection attributes
-    const albumAttributes = [
+    // Albums collection
+    await createCollectionIfNotExists(databases, databaseId, albumsCollectionId, 'Albums', [
       { key: 'title', type: 'string', size: 255, required: true },
       { key: 'artist', type: 'string', size: 255, required: true },
       { key: 'coverImage', type: 'string', size: 2048, required: false },
       { key: 'songCount', type: 'integer', required: false },
       { key: 'createdAt', type: 'datetime', required: false },
-    ];
+    ]);
 
-    for (const attr of albumAttributes) {
-      try {
-        if (attr.type === 'string') {
-          await databases.createStringAttribute(
-            databaseId,
-            albumsCollectionId,
-            attr.key,
-            attr.size || 255,
-            attr.required || false
-          );
-        } else if (attr.type === 'integer') {
-          await databases.createIntegerAttribute(
-            databaseId,
-            albumsCollectionId,
-            attr.key,
-            attr.required || false
-          );
-        } else if (attr.type === 'datetime') {
-          await databases.createDatetimeAttribute(
-            databaseId,
-            albumsCollectionId,
-            attr.key,
-            attr.required || false
-          );
-        }
-      } catch (e: any) {
-        if (!e.message?.includes('already exists')) {
-          console.error(`Error creating attribute ${attr.key}:`, e.message);
-        }
-      }
-    }
+    // Playlists collection
+    await createCollectionIfNotExists(databases, databaseId, playlistsCollectionId, 'Playlists', [
+      { key: 'name', type: 'string', size: 255, required: true },
+      { key: 'description', type: 'string', size: 1000, required: false },
+      { key: 'coverImage', type: 'string', size: 2048, required: false },
+      { key: 'userId', type: 'string', size: 255, required: true },
+      { key: 'songIds', type: 'string', size: 10000, required: false },
+      { key: 'createdAt', type: 'datetime', required: false },
+    ]);
 
-    // ── Create Storage Bucket ──
+    // Playlist Songs collection (for detailed playlist song entries)
+    await createCollectionIfNotExists(databases, databaseId, playlistSongsCollectionId, 'Playlist Songs', [
+      { key: 'playlistId', type: 'string', size: 255, required: true },
+      { key: 'songId', type: 'string', size: 255, required: true },
+      { key: 'addedAt', type: 'datetime', required: false },
+      { key: 'position', type: 'integer', required: false },
+    ]);
+
+    // Storage Bucket
     const storage = new Storage(client);
-
     try {
       await storage.getBucket(storageBucketId);
     } catch {
@@ -172,7 +136,7 @@ export async function POST(request: NextRequest) {
           ],
           fileSecurity: false,
           enabled: true,
-          maximumFileSize: 52428800, // 50MB
+          maximumFileSize: 52428800,
           allowedFileExtensions: ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac'],
           compression: 'none' as any,
           encryption: false,
@@ -185,7 +149,6 @@ export async function POST(request: NextRequest) {
           throw new Error(
             `Failed to create storage bucket "${storageBucketId}". ` +
             `Make sure your APPWRITE_API_KEY has buckets.read and buckets.write scopes. ` +
-            `You can also create it manually in the Appwrite Console > Storage. ` +
             `Error: ${e.message}`
           );
         }
@@ -198,6 +161,7 @@ export async function POST(request: NextRequest) {
       databaseId,
       songsCollectionId,
       albumsCollectionId,
+      playlistsCollectionId,
       bucketId: storageBucketId,
     });
   } catch (error: any) {

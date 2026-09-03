@@ -4,16 +4,14 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 
 /**
- * MobileAudioPlayer → HtmlAudioPlayer
+ * MobileAudioPlayer — plays direct audio streams on mobile devices.
  *
- * Plays audio from a direct URL (Appwrite-hosted MP3) using an HTML5 <audio> element.
- * Works on ALL devices — mobile and desktop — whenever currentSong.audioUrl is set.
+ * YouTube iframes do NOT support background playback on mobile (especially iOS).
+ * This component fetches a direct audio URL from /api/mobile-audio and plays it
+ * through an HTML5 <audio> element, which supports background playback when
+ * combined with the MediaSession API.
  *
- * Falls back to fetching from /api/mobile-audio only when audioUrl is missing
- * but a youtubeVideoId exists.
- *
- * When no audioUrl is available, this component is a no-op — YouTubePlayer
- * handles playback via the YouTube iframe instead.
+ * On desktop, this component is a no-op — YouTubePlayer handles playback there.
  */
 export default function MobileAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -33,7 +31,7 @@ export default function MobileAudioPlayer() {
 
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile on mount (used for MediaSession & wake lock decisions)
+  // Detect mobile on mount
   useEffect(() => {
     const checkMobile = () => {
       const ua = navigator.userAgent;
@@ -45,13 +43,7 @@ export default function MobileAudioPlayer() {
     checkMobile();
   }, []);
 
-  // ── Determine if this component should be active ─────────────────────
-  // Active when: audioUrl exists (MP3 in Appwrite) OR on mobile with youtubeVideoId
-  const hasAudioUrl = !!(currentSong?.audioUrl && currentSong.audioUrl.trim());
-  const hasYoutubeId = !!(currentSong?.youtubeVideoId && currentSong.youtubeVideoId.trim());
-  const shouldPlay = hasAudioUrl || (isMobile && hasYoutubeId);
-
-  // ── Fetch direct audio URL for YouTube songs (mobile fallback only) ──
+  // ── Fetch direct audio URL for YouTube songs ──────────────────────────
   const fetchAudioUrl = useCallback(
     async (videoId: string): Promise<string | null> => {
       try {
@@ -64,7 +56,7 @@ export default function MobileAudioPlayer() {
         const data = await res.json();
         return data.audioUrl || null;
       } catch (e) {
-        console.error('HtmlAudioPlayer: Failed to fetch audio URL', e);
+        console.error('MobileAudioPlayer: Failed to fetch audio URL', e);
         return null;
       }
     },
@@ -73,9 +65,12 @@ export default function MobileAudioPlayer() {
 
   // ── Create audio element ──────────────────────────────────────────────
   useEffect(() => {
+    if (!isMobile) return;
+
     if (!audioRef.current) {
       const audio = new Audio();
       audio.preload = 'auto';
+      // Prevent iOS from pausing audio on visibility change
       audio.setAttribute('playsinline', 'true');
       audio.setAttribute('webkit-playsinline', 'true');
       audioRef.current = audio;
@@ -88,11 +83,11 @@ export default function MobileAudioPlayer() {
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [isMobile]);
 
   // ── Load and play a song ──────────────────────────────────────────────
   useEffect(() => {
-    if (!shouldPlay || !audioRef.current || !currentSong) return;
+    if (!isMobile || !audioRef.current || !currentSong) return;
 
     const audio = audioRef.current;
 
@@ -100,7 +95,7 @@ export default function MobileAudioPlayer() {
       // Determine the audio source
       let audioSrc = currentSong.audioUrl;
 
-      // If no direct audio URL, fetch from YouTube (mobile fallback)
+      // If no direct audio URL, fetch from YouTube
       if (!audioSrc && currentSong.youtubeVideoId) {
         if (isLoadingRef.current) return;
         isLoadingRef.current = true;
@@ -109,7 +104,7 @@ export default function MobileAudioPlayer() {
         isLoadingRef.current = false;
 
         if (!fetchedUrl) {
-          console.warn('HtmlAudioPlayer: Could not resolve audio URL for', currentSong.youtubeVideoId);
+          console.warn('MobileAudioPlayer: Could not resolve audio URL for', currentSong.youtubeVideoId);
           return;
         }
         audioSrc = fetchedUrl;
@@ -135,17 +130,17 @@ export default function MobileAudioPlayer() {
         try {
           await audio.play();
         } catch (e) {
-          console.warn('HtmlAudioPlayer: autoplay blocked, waiting for user gesture');
+          console.warn('MobileAudioPlayer: autoplay blocked, waiting for user gesture');
         }
       }
     };
 
     loadAndPlay();
-  }, [currentSong?.audioUrl, currentSong?.youtubeVideoId, currentSong?.$id, shouldPlay]);
+  }, [currentSong?.audioUrl, currentSong?.youtubeVideoId, currentSong?.$id]);
 
   // ── Play/pause sync ───────────────────────────────────────────────────
   useEffect(() => {
-    if (!shouldPlay || !audioRef.current) return;
+    if (!isMobile || !audioRef.current) return;
 
     const audio = audioRef.current;
 
@@ -154,26 +149,26 @@ export default function MobileAudioPlayer() {
     } else {
       audio.pause();
     }
-  }, [isPlaying, shouldPlay]);
+  }, [isPlaying, isMobile]);
 
   // ── Volume sync ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (!shouldPlay || !audioRef.current) return;
+    if (!isMobile || !audioRef.current) return;
     audioRef.current.volume = volume;
-  }, [volume, shouldPlay]);
+  }, [volume, isMobile]);
 
   // ── Seek sync (store → audio) ─────────────────────────────────────────
   useEffect(() => {
-    if (!shouldPlay || !audioRef.current) return;
+    if (!isMobile || !audioRef.current) return;
     const diff = Math.abs(audioRef.current.currentTime - currentTime);
     if (diff > 2) {
       audioRef.current.currentTime = currentTime;
     }
-  }, [currentTime, shouldPlay]);
+  }, [currentTime, isMobile]);
 
   // ── Audio events (time update, metadata, ended) ───────────────────────
   useEffect(() => {
-    if (!shouldPlay || !audioRef.current) return;
+    if (!isMobile || !audioRef.current) return;
 
     const audio = audioRef.current;
 
@@ -190,10 +185,10 @@ export default function MobileAudioPlayer() {
     };
 
     const handleError = (e: Event) => {
-      console.error('HtmlAudioPlayer error:', e);
+      console.error('MobileAudioPlayer error:', e);
     };
 
-    // Resume on visibility change (mobile background playback)
+    // Prevent iOS from pausing on visibility change
     const handleVisibility = () => {
       if (!document.hidden && isPlaying && audio.paused && audio.src) {
         audio.play().catch(() => {});
@@ -213,11 +208,11 @@ export default function MobileAudioPlayer() {
       audio.removeEventListener('error', handleError);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [shouldPlay, nextSong, setCurrentTime, setDuration, isPlaying]);
+  }, [isMobile, nextSong, setCurrentTime, setDuration, isPlaying]);
 
   // ── MediaSession API — lock screen & notification controls ─────────────
   useEffect(() => {
-    if (!shouldPlay || !currentSong || !('mediaSession' in navigator)) return;
+    if (!isMobile || !currentSong || !('mediaSession' in navigator)) return;
 
     const thumbnailUrl =
       currentSong.coverImage ||
@@ -255,11 +250,11 @@ export default function MobileAudioPlayer() {
         usePlayerStore.getState().setCurrentTime(details.seekTime);
       }
     });
-  }, [shouldPlay, currentSong]);
+  }, [isMobile, currentSong]);
 
   // ── Wake Lock — prevent screen sleep while playing ────────────────────
   useEffect(() => {
-    if (!shouldPlay) return;
+    if (!isMobile) return;
 
     const requestWakeLock = async () => {
       try {
@@ -282,6 +277,7 @@ export default function MobileAudioPlayer() {
       releaseWakeLock();
     }
 
+    // Re-request wake lock when tab becomes visible
     const handleVisibility = () => {
       if (!document.hidden && isPlaying) {
         requestWakeLock();
@@ -293,11 +289,11 @@ export default function MobileAudioPlayer() {
       releaseWakeLock();
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [shouldPlay, isPlaying]);
+  }, [isMobile, isPlaying]);
 
-  // ── iOS keep-alive hack: periodically check buffering ─────────────────
+  // ── iOS keep-alive hack: periodically seek to prevent auto-pause ──────
   useEffect(() => {
-    if (!shouldPlay || !audioRef.current) return;
+    if (!isMobile || !audioRef.current) return;
 
     let keepAliveInterval: NodeJS.Timeout;
 
@@ -305,11 +301,14 @@ export default function MobileAudioPlayer() {
       keepAliveInterval = setInterval(() => {
         const audio = audioRef.current;
         if (audio && !audio.paused && audio.readyState >= 2) {
+          // Tiny seek to keep the audio pipeline alive on iOS
+          // Only do this if audio is close to stalling
           if (audio.buffered.length > 0) {
             const buffered = audio.buffered.end(audio.buffered.length - 1);
             const remaining = buffered - audio.currentTime;
             if (remaining < 10) {
-              // Safety net — audio about to stall
+              // Audio is about to stall — this shouldn't normally happen
+              // with a direct stream, but as a safety net
             }
           }
         }
@@ -319,7 +318,7 @@ export default function MobileAudioPlayer() {
     return () => {
       if (keepAliveInterval) clearInterval(keepAliveInterval);
     };
-  }, [shouldPlay, isPlaying]);
+  }, [isMobile, isPlaying]);
 
   // Don't render anything
   return null;
