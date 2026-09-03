@@ -5,6 +5,7 @@ import { databases, DATABASE_ID, SONGS_COLLECTION_ID, ALBUMS_COLLECTION_ID } fro
 import { ID } from 'appwrite';
 import { Song, Album } from '@/lib/types';
 import toast from 'react-hot-toast';
+import BottomNav from '@/components/BottomNav';
 import {
   FaYoutube,
   FaMusic,
@@ -208,7 +209,8 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pt-20 lg:pt-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="p-4 sm:p-6 pt-5 sm:pt-6 pb-28 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Admin Panel</h1>
@@ -461,6 +463,8 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+    </div>
+    <BottomNav />
     </div>
   );
 }

@@ -6,9 +6,11 @@ import { useAuth } from '@/lib/auth';
 import { databases, DATABASE_ID, SONGS_COLLECTION_ID } from '@/lib/appwrite';
 import { Song } from '@/lib/types';
 import Sidebar from '@/components/Sidebar';
+import BottomNav from '@/components/BottomNav';
 import MiniPlayer from '@/components/MiniPlayer';
 import FullPlayer from '@/components/FullPlayer';
 import YouTubePlayer from '@/components/YouTubePlayer';
+import BackgroundPlayback from '@/components/BackgroundPlayback';
 import SongCard from '@/components/SongCard';
 import { FaSearch, FaMusic } from 'react-icons/fa';
 
@@ -60,8 +62,8 @@ export default function SongsPage() {
   return (
     <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
-      <main className="flex-1 pb-24 min-w-0">
-        <div className="px-4 sm:px-8 pt-20 lg:pt-8 pb-6 sm:py-8">
+      <main className="flex-1 pb-28 min-w-0">
+        <div className="px-5 sm:px-8 pt-5 sm:pt-8 pb-6">
           <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Songs</h1>
 
           <div className="relative mb-6 max-w-md">
@@ -81,12 +83,12 @@ export default function SongsPage() {
               <h3 className="text-lg sm:text-xl font-semibold text-gray-400">
                 {searchQuery ? 'No songs found' : 'No songs yet'}
               </h3>
-              <p className="text-gray-500 mt-2 text-sm sm:text-base">
+              <p className="text-gray-500 mt-2 text-sm">
                 {searchQuery ? 'Try a different search' : 'Add some music from the admin panel'}
               </p>
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {filteredSongs.map((song, index) => (
                 <SongCard key={song.$id} song={song} songs={filteredSongs} index={index} />
               ))}
@@ -94,7 +96,9 @@ export default function SongsPage() {
           )}
         </div>
       </main>
+      <BottomNav />
       <YouTubePlayer />
+      <BackgroundPlayback />
       <MiniPlayer />
       <FullPlayer />
     </div>

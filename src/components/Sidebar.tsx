@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { useState, useEffect } from 'react';
 import {
   FaHome, FaMusic, FaCompactDisc, FaListUl, FaPlusCircle,
-  FaSignOutAlt, FaUser, FaBars, FaTimes,
+  FaSignOutAlt, FaUser,
 } from 'react-icons/fa';
 
 const navItems = [
@@ -20,16 +19,9 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Close on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
-  const navContent = (
-    <>
+  return (
+    <aside className="hidden lg:flex w-64 bg-[#111] border-r border-white/5 flex-col h-screen sticky top-0 shrink-0">
       {/* Logo */}
       <div className="p-6 pb-4">
         <Link href="/" className="flex items-center gap-3">
@@ -95,7 +87,7 @@ export default function Sidebar() {
 
       {/* User section */}
       <div className="p-4 border-t border-white/5">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-rose-600/20 flex items-center justify-center">
             <FaUser className="text-rose-400" />
           </div>
@@ -103,49 +95,15 @@ export default function Sidebar() {
             <p className="text-sm font-medium truncate">{user?.name || 'User'}</p>
             <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
-          <button
-            onClick={logout}
-            className="p-2 text-gray-400 hover:text-rose-400 transition-colors rounded-lg hover:bg-white/5"
-            title="Sign out"
-          >
-            <FaSignOutAlt />
-          </button>
         </div>
+        <button
+          onClick={logout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-rose-600/20 text-gray-400 hover:text-rose-400 transition-all text-sm font-medium"
+        >
+          <FaSignOutAlt />
+          Sign Out
+        </button>
       </div>
-    </>
-  );
-
-  return (
-    <>
-      {/* Mobile hamburger button */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-[#111] border border-white/10 text-white hover:bg-white/10 transition-colors shadow-lg"
-      >
-        {mobileOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
-      </button>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar */}
-      <aside
-        className={`lg:hidden fixed top-0 left-0 w-64 bg-[#111] border-r border-white/5 flex flex-col h-screen z-40 transition-transform duration-300 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {navContent}
-      </aside>
-
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 bg-[#111] border-r border-white/5 flex-col h-screen sticky top-0 shrink-0">
-        {navContent}
-      </aside>
-    </>
+    </aside>
   );
 }
