@@ -1,10 +1,4 @@
 #!/bin/bash
-# ══════════════════════════════════════════════════════════
-#  Freebuff Music Player — One-Click VPS Deploy
-#  Target: 40.82.129.6
-#  Stack:  Docker + Nginx + Next.js
-# ══════════════════════════════════════════════════════════
-
 set -e
 
 echo ""
@@ -37,11 +31,12 @@ else
     echo "   ✅ Docker Compose already installed"
 fi
 
-# ── 4. Install Nginx (host level) ────────────────────────
-echo "🌐 [4/6] Installing Nginx on host..."
+# ── 4. Install Nginx ─────────────────────────────────────
+echo "🌐 [4/6] Installing Nginx..."
 if ! command -v nginx &> /dev/null; then
     apt-get install -y -qq nginx > /dev/null 2>&1
     systemctl enable nginx
+    systemctl start nginx
     echo "   ✅ Nginx installed"
 else
     echo "   ✅ Nginx already installed"
@@ -51,11 +46,10 @@ fi
 echo "⚙️  [5/6] Configuring host Nginx..."
 cat > /etc/nginx/sites-available/musicplayer << 'NGINX_HOST'
 server {
-    listen 80;
+    listen 3000;
     server_name _;
-
     location / {
-        proxy_pass http://127.0.0.1:80;
+        proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -68,36 +62,29 @@ server {
 }
 NGINX_HOST
 
-# Enable the site
 ln -sf /etc/nginx/sites-available/musicplayer /etc/nginx/sites-enabled/musicplayer
 rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 nginx -t && systemctl reload nginx > /dev/null 2>&1
 echo "   ✅ Host Nginx configured"
 
-# ── 6. Deploy with Docker ────────────────────────────────
+# ── 6. Deploy ────────────────────────────────────────────
 echo "🚀 [6/6] Building and deploying with Docker..."
 cd /root/musicplayer 2>/dev/null || cd /opt/musicplayer 2>/dev/null || cd "$(dirname "$0")"
-
-# Stop old containers
 docker compose down 2>/dev/null || true
-
-# Build and start
 docker compose up -d --build 2>&1 | tail -5
 echo "   ✅ Containers started"
 
-# ── Done ─────────────────────────────────────────────────
 echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "✅ DEPLOYMENT COMPLETE!"
 echo "═══════════════════════════════════════════════════════"
 echo ""
-echo "🌐 Website:  http://40.82.129.6"
+echo "🌐 Website:  http://40.82.129.6:3000"
 echo "📡 Appwrite: http://40.82.129.6/v1"
 echo ""
-echo "📋 Container status:"
 docker compose ps
 echo ""
-echo "📊 To view logs:     docker compose logs -f"
-echo "🔄 To restart:       docker compose restart"
-echo "🛑 To stop:          docker compose down"
+echo "📊 Logs:     docker compose logs -f"
+echo "🔄 Restart:  docker compose restart"
+echo "🛑 Stop:     docker compose down"
 echo ""
