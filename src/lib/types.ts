@@ -12,6 +12,7 @@ export interface Song {
   duration: number;
   createdAt: string;
   isAdmin: boolean;
+  lyrics: string;
 }
 
 export interface Playlist {

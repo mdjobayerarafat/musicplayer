@@ -90,6 +90,8 @@ export async function POST(request: NextRequest) {
       { key: 'youtubeVideoId', type: 'string', size: 50, required: false },
       { key: 'duration', type: 'integer', required: false },
       { key: 'createdAt', type: 'datetime', required: false },
+      { key: 'lyrics', type: 'string', size: 50000, required: false },
+      { key: 'songOrder', type: 'integer', required: false },
     ]);
 
     // Albums collection

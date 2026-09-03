@@ -81,10 +81,23 @@ export default function FullPlayer() {
       </div>
 
       {/* Song Info */}
-      <div className="relative z-10 text-center px-4 sm:px-8 mb-3 sm:mb-5">
+      <div className="relative z-10 text-center px-4 sm:px-8 mb-2 sm:mb-4">
         <h2 className="text-base sm:text-2xl font-bold truncate px-2">{currentSong.title}</h2>
         <p className="text-gray-400 text-sm mt-0.5 sm:mt-1">{currentSong.artist}</p>
       </div>
+
+      {/* Live Lyrics */}
+      {(currentSong as any).lyrics && (
+        <div className="relative z-10 px-4 sm:px-8 mb-2 sm:mb-4 max-h-[100px] sm:max-h-[140px] overflow-y-auto scrollbar-hide">
+          <div className="text-center space-y-2">
+            {((currentSong as any).lyrics as string).split('\n').filter((l: string) => l.trim()).map((line: string, i: number) => (
+              <p key={i} className="text-sm sm:text-base text-gray-300 leading-relaxed transition-all duration-500">
+                {line.trim()}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Waveform */}
       <div className="relative z-10 px-4 sm:px-8 mb-2 sm:mb-4">

@@ -162,6 +162,23 @@ export async function POST(request: NextRequest) {
     const duration = video.duration || 0;
     const durationSeconds = Math.floor(duration / 1000);
 
+    // Auto-extract lyrics from description
+    let lyrics = '';
+    try {
+      const desc = video.description || '';
+      const lyricsPatterns = [
+        /(?:lyrics?|text|words)[:\s\n]+([\s\S]*?)(?:\n\n|$)/i,
+        /\[\s*lyrics?\s*\]([\s\S]*?)\[\s*\/lyrics?\s*\]/i,
+      ];
+      for (const pattern of lyricsPatterns) {
+        const match = desc.match(pattern);
+        if (match && match[1].trim().length > 20) {
+          lyrics = match[1].trim();
+          break;
+        }
+      }
+    } catch (_) {}
+
     // Step 2: Download audio as MP3
     tmpFilePath = await downloadAudio(videoId);
 
@@ -183,6 +200,7 @@ export async function POST(request: NextRequest) {
       videoId,
       originalUrl: url,
       audioUrl,
+      lyrics,
     });
   } catch (error: any) {
     console.error('YouTube extraction error:', error);

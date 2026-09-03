@@ -20,6 +20,7 @@ import {
   FaImage,
   FaLink,
   FaUpload,
+  FaMicrophone,
 } from 'react-icons/fa';
 
 export default function AdminPage() {
@@ -34,6 +35,8 @@ export default function AdminPage() {
   const [setupLoading, setSetupLoading] = useState(false);
   const [editingSongId, setEditingSongId] = useState<string | null>(null);
   const [editingAlbumId, setEditingAlbumId] = useState('');
+  const [editingLyricsSongId, setEditingLyricsSongId] = useState<string | null>(null);
+  const [editingLyrics, setEditingLyrics] = useState('');
 
   // Album editing state
   const [editingAlbum, setEditingAlbum] = useState<string | null>(null);
@@ -126,6 +129,7 @@ export default function AdminPage() {
         youtubeUrl: data.originalUrl,
         youtubeVideoId: data.videoId,
         duration: data.duration,
+        lyrics: data.lyrics || '',
         createdAt: new Date().toISOString(),
       });
       toast.success(`Added "${data.title}"! 🎵`, { id: 'extract' });
@@ -152,9 +156,11 @@ export default function AdminPage() {
     if (!title || !artist || !audioUrl) { toast.error('Please fill in all required fields'); return; }
     setLoading(true);
     try {
+      const lyrics = formData.get('lyrics') as string || '';
       await databases.createDocument(DATABASE_ID, SONGS_COLLECTION_ID, ID.unique(), {
         title, artist, albumId, coverImage, audioUrl,
         youtubeUrl: '', youtubeVideoId: '', duration: 0,
+        lyrics,
         createdAt: new Date().toISOString(),
       });
       toast.success('Song added successfully!');
@@ -205,6 +211,22 @@ export default function AdminPage() {
   const startEditAlbum = (song: Song) => {
     setEditingSongId(song.$id);
     setEditingAlbumId(song.albumId || '');
+  };
+
+  const startEditLyrics = (song: Song) => {
+    setEditingLyricsSongId(song.$id);
+    setEditingLyrics(song.lyrics || '');
+  };
+
+  const saveLyrics = async (song: Song) => {
+    try {
+      await databases.updateDocument(DATABASE_ID, SONGS_COLLECTION_ID, song.$id, { lyrics: editingLyrics });
+      toast.success('Lyrics updated!');
+      setEditingLyricsSongId(null);
+      loadSongs();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update lyrics');
+    }
   };
 
   const saveEditAlbum = async (song: Song) => {
@@ -418,6 +440,8 @@ export default function AdminPage() {
               <input name="artist" placeholder="Artist name *" required className={inputClass} />
               <input name="audioUrl" placeholder="Direct audio URL (MP3, etc.) *" required className={inputClass} />
               <input name="coverImage" placeholder="Cover image URL (optional)" className={inputClass} />
+              <textarea name="lyrics" placeholder="Lyrics (optional)" rows={4}
+                className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-teal-500/50 text-white placeholder-gray-500 text-sm resize-none" />
               <select name="albumId" className={inputClass}>
                 <option value="">No Album</option>
                 {albums.map((album) => (
@@ -624,8 +648,9 @@ export default function AdminPage() {
               </div>
             ) : (
               songs.map((song, i) => (
-                <div key={song.$id} className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 hover:bg-white/[0.04] transition-all group">
-                  <span className="text-sm text-gray-500 w-8 text-center">{i + 1}</span>
+                <div key={song.$id} className="hover:bg-white/[0.04] transition-all group">
+                  <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+                  <span className="text-sm text-gray-500 w-8 text-center flex-shrink-0">{i + 1}</span>
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-teal-600/10 flex-shrink-0">
                     {song.coverImage ? (
                       <img src={song.coverImage} alt="" className="w-full h-full object-cover" />
@@ -652,25 +677,60 @@ export default function AdminPage() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     {song.audioUrl && <span className="hidden sm:inline text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">MP3</span>}
-                    {song.youtubeVideoId && <span className="hidden sm:inline text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded-full">YouTube</span>}
+                    {song.youtubeVideoId && <span className="hidden sm:inline text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded-full">YT</span>}
+                    {song.lyrics && <span className="hidden sm:inline text-xs text-purple-400 bg-purple-400/10 px-2 py-1 rounded-full">Lyrics</span>}
                     {song.youtubeUrl && (
-                      <a href={song.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:text-red-300 transition-colors">
-                        <FaYoutube className="text-xl" />
+                      <a href={song.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:text-red-300 transition-colors p-1">
+                        <FaYoutube className="text-base" />
                       </a>
                     )}
+                    <button onClick={() => startEditLyrics(song)}
+                      className="p-1.5 text-gray-500 hover:text-purple-400 transition-colors opacity-0 group-hover:opacity-100" title="Edit lyrics">
+                      <FaMicrophone className="text-xs" />
+                    </button>
                     {editingSongId !== song.$id && (
                       <button onClick={() => startEditAlbum(song)}
-                        className="p-2 text-gray-500 hover:text-teal-400 transition-colors opacity-0 group-hover:opacity-100" title="Change album">
-                        <FaEdit />
+                        className="p-1.5 text-gray-500 hover:text-teal-400 transition-colors opacity-0 group-hover:opacity-100" title="Change album">
+                        <FaEdit className="text-xs" />
                       </button>
                     )}
                     <button onClick={() => handleDeleteSong(song.$id)}
-                      className="p-2 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
-                      <FaTrash />
+                      className="p-1.5 text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+                        <FaTrash className="text-xs" />
                     </button>
                   </div>
+                  </div>
+
+                  {/* Lyrics Edit Section */}
+                  {editingLyricsSongId === song.$id && (
+                    <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-white/[0.04]">
+                      <div className="flex items-center justify-between mt-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <FaMicrophone className="text-purple-400 text-sm" />
+                          <span className="text-sm font-medium text-purple-400">Lyrics for &quot;{song.title}&quot;</span>
+                        </div>
+                      </div>
+                      <textarea
+                        value={editingLyrics}
+                        onChange={(e) => setEditingLyrics(e.target.value)}
+                        placeholder="Paste or type lyrics here..."
+                        rows={8}
+                        className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.06] rounded-xl focus:outline-none focus:border-purple-500/50 text-white placeholder-gray-500 text-sm resize-none mb-3"
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={() => saveLyrics(song)}
+                          className="flex items-center gap-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-sm font-medium transition-all text-white">
+                          <FaCheck /> Save Lyrics
+                        </button>
+                        <button onClick={() => setEditingLyricsSongId(null)}
+                          className="flex items-center gap-1 px-4 py-2 bg-white/[0.05] hover:bg-white/[0.1] rounded-lg text-sm font-medium transition-all">
+                          <FaTimes /> Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
