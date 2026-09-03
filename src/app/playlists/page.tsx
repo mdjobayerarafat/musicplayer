@@ -7,6 +7,7 @@ import Sidebar from '@/components/Sidebar';
 import MiniPlayer from '@/components/MiniPlayer';
 import FullPlayer from '@/components/FullPlayer';
 import YouTubePlayer from '@/components/YouTubePlayer';
+import MobileAudioPlayer from '@/components/MobileAudioPlayer';
 import { FaListUl } from 'react-icons/fa';
 
 export default function PlaylistsPage() {
@@ -51,6 +52,7 @@ export default function PlaylistsPage() {
       </main>
 
       <YouTubePlayer />
+      <MobileAudioPlayer />
       <MiniPlayer />
       <FullPlayer />
     </div>

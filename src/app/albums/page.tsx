@@ -10,6 +10,7 @@ import BottomNav from '@/components/BottomNav';
 import MiniPlayer from '@/components/MiniPlayer';
 import FullPlayer from '@/components/FullPlayer';
 import YouTubePlayer from '@/components/YouTubePlayer';
+import MobileAudioPlayer from '@/components/MobileAudioPlayer';
 import BackgroundPlayback from '@/components/BackgroundPlayback';
 import { FaCompactDisc, FaMusic, FaPlay } from 'react-icons/fa';
 
@@ -91,6 +92,7 @@ export default function AlbumsPage() {
       </main>
       <BottomNav />
       <YouTubePlayer />
+      <MobileAudioPlayer />
       <BackgroundPlayback />
       <MiniPlayer />
       <FullPlayer />

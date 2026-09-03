@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 
 let ytApiLoaded = false;
@@ -36,12 +36,24 @@ if (typeof window !== 'undefined') {
   };
 }
 
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) ||
+    ('ontouchstart' in window && window.innerWidth < 1024)
+  );
+}
+
 export default function YouTubePlayer() {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const readyRef = useRef(false);
   const lastVideoId = useRef<string>('');
   const timeUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Skip YouTube iframe on mobile — MobileAudioPlayer handles it
+  const [mobile] = useState(() => isMobileDevice());
 
   const {
     currentSong,
@@ -55,7 +67,10 @@ export default function YouTubePlayer() {
 
   const videoId = currentSong?.youtubeVideoId || '';
 
+  // On mobile, MobileAudioPlayer handles playback — don't initialize YouTube iframe
   useEffect(() => {
+    if (mobile) return;
+
     let mounted = true;
 
     async function init() {
