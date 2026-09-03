@@ -75,7 +75,7 @@ export default function AdminPage() {
 
     setLoading(true);
     try {
-      toast.loading('Fetching video info...', { id: 'extract' });
+      toast.loading('🔍 Fetching video info...', { id: 'extract' });
 
       const response = await fetch('/api/extract-audio', {
         method: 'POST',
@@ -89,7 +89,7 @@ export default function AdminPage() {
         throw new Error(data.error || 'Failed to extract video info');
       }
 
-      toast.loading('Saving to database...', { id: 'extract' });
+      toast.loading('💾 Saving to database...', { id: 'extract' });
 
       await databases.createDocument(
         DATABASE_ID,
@@ -100,7 +100,7 @@ export default function AdminPage() {
           artist: data.artist,
           albumId: '',
           coverImage: data.thumbnail,
-          audioUrl: '',
+          audioUrl: data.audioUrl || '',
           youtubeUrl: data.originalUrl,
           youtubeVideoId: data.videoId,
           duration: data.duration,
@@ -108,7 +108,7 @@ export default function AdminPage() {
         }
       );
 
-      toast.success(`Added "${data.title}"!`, { id: 'extract' });
+      toast.success(`Added "${data.title}"! 🎵`, { id: 'extract' });
       setYoutubeUrl('');
       loadSongs();
     } catch (error: any) {
@@ -272,7 +272,7 @@ export default function AdminPage() {
                 onKeyDown={(e) => e.key === 'Enter' && handleExtractAndAdd()}
               />
               <p className="text-xs text-gray-500">
-                Music plays directly from YouTube — no download needed
+                Audio is downloaded as MP3 and stored in Appwrite for reliable playback
               </p>
               <button
                 onClick={handleExtractAndAdd}
@@ -442,6 +442,9 @@ export default function AdminPage() {
                     <p className="text-sm text-gray-400 truncate">{song.artist}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {song.audioUrl && (
+                      <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">MP3</span>
+                    )}
                     {song.youtubeVideoId && (
                       <span className="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded-full">YouTube</span>
                     )}

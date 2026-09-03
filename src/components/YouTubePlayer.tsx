@@ -52,7 +52,6 @@ export default function YouTubePlayer() {
   const lastVideoId = useRef<string>('');
   const timeUpdateInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Skip YouTube iframe on mobile — MobileAudioPlayer handles it
   const [mobile] = useState(() => isMobileDevice());
 
   const {
@@ -67,9 +66,14 @@ export default function YouTubePlayer() {
 
   const videoId = currentSong?.youtubeVideoId || '';
 
-  // On mobile, MobileAudioPlayer handles playback — don't initialize YouTube iframe
+  // Skip YouTube iframe when:
+  // 1. On mobile (MobileAudioPlayer handles it)
+  // 2. Song has an audioUrl (Appwrite-hosted MP3 — MobileAudioPlayer handles it)
+  const hasAudioUrl = !!(currentSong?.audioUrl && currentSong.audioUrl.trim());
+  const shouldUseIframe = !mobile && !hasAudioUrl;
+
   useEffect(() => {
-    if (mobile) return;
+    if (!shouldUseIframe) return;
 
     let mounted = true;
 
@@ -97,8 +101,6 @@ export default function YouTubePlayer() {
           iv_load_policy: 3,
           modestbranding: 1,
           rel: 0,
-          // NO origin param — YouTube auto-detects it
-          // This avoids error 2 when origin doesn't match
         },
         events: {
           onReady: () => {
@@ -122,11 +124,11 @@ export default function YouTubePlayer() {
       mounted = false;
       if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
     };
-  }, []);
+  }, [shouldUseIframe]);
 
   const loadVideo = useCallback((id: string) => {
     if (!playerRef.current || !readyRef.current) return;
-    if (!id || id.length !== 11) return; // Validate video ID
+    if (!id || id.length !== 11) return;
     if (lastVideoId.current === id) return;
 
     lastVideoId.current = id;
@@ -152,31 +154,31 @@ export default function YouTubePlayer() {
   }, [setCurrentTime, setDuration]);
 
   useEffect(() => {
-    if (videoId && videoId !== lastVideoId.current) {
+    if (shouldUseIframe && videoId && videoId !== lastVideoId.current) {
       if (readyRef.current) loadVideo(videoId);
     }
-  }, [videoId, loadVideo]);
+  }, [videoId, loadVideo, shouldUseIframe]);
 
   useEffect(() => {
-    if (!playerRef.current || !readyRef.current) return;
+    if (!playerRef.current || !readyRef.current || !shouldUseIframe) return;
     try {
       if (isPlaying) playerRef.current.playVideo();
       else playerRef.current.pauseVideo();
     } catch (_) {}
-  }, [isPlaying]);
+  }, [isPlaying, shouldUseIframe]);
 
   useEffect(() => {
-    if (!playerRef.current || !readyRef.current) return;
+    if (!playerRef.current || !readyRef.current || !shouldUseIframe) return;
     try { playerRef.current.setVolume(volume * 100); } catch (_) {}
-  }, [volume]);
+  }, [volume, shouldUseIframe]);
 
   useEffect(() => {
-    if (!playerRef.current || !readyRef.current) return;
+    if (!playerRef.current || !readyRef.current || !shouldUseIframe) return;
     try {
       const pt = playerRef.current.getCurrentTime();
       if (Math.abs(pt - currentTime) > 3) playerRef.current.seekTo(currentTime, true);
     } catch (_) {}
-  }, [currentTime]);
+  }, [currentTime, shouldUseIframe]);
 
   return (
     <div ref={containerRef} className="absolute opacity-0 pointer-events-none" style={{ width: 0, height: 0 }}>
