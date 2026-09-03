@@ -1,26 +1,150 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #e11d48;
+  --primary-dark: #be123c;
+  --primary-light: #fb7185;
+  --bg-dark: #0a0a0a;
+  --bg-card: #1a1a1a;
+  --bg-card-hover: #252525;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* Player animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+.animate-spin-slow.paused { animation-play-state: paused; }
+
+/* Gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #e11d48 0%, #9f1239 50%, #4c0519 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(145deg, rgba(30, 30, 30, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+  backdrop-filter: blur(10px);
+}
+
+/* Album art ring */
+.art-ring {
+  background: conic-gradient(from 0deg, #e11d48, #4c0519, #e11d48);
+  padding: 3px;
+  border-radius: 50%;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Range input styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: #e11d48;
+  margin-top: -5px;
+  box-shadow: 0 0 10px rgba(225, 29, 72, 0.5);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: #e11d48;
+  border: none;
+  box-shadow: 0 0 10px rgba(225, 29, 72, 0.5);
+}
+
+/* Pulse animation for playing indicator */
+@keyframes eq-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.eq-bar-1 { animation: eq-bar 0.8s ease-in-out infinite; }
+.eq-bar-2 { animation: eq-bar 0.8s ease-in-out 0.2s infinite; }
+.eq-bar-3 { animation: eq-bar 0.8s ease-in-out 0.4s infinite; }
+
+/* Mini player slide up */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.slide-up { animation: slide-up 0.3s ease-out; }
+
+/* Toast styling */
+.toast-custom {
+  background: #1a1a1a !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Responsive helpers */
+@media (max-width: 1023px) {
+  .sidebar-offset {
+    padding-left: 0;
+  }
 }

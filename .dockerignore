@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+*.md
+scripts
+.freebuff
+docker-compose.yml
+deploy.sh
